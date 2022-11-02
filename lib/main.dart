@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Tic Tac Toe',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Tic Tac Toe'),
     );
   }
 }
@@ -52,10 +52,12 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _turn = 0;
+  int _startTurn = 0;
   int _remaining = 9;
   int _winner = -1;
-  static const List<List<int>> _lines = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,6,8], [0,4,8], [2,4,6]];
+  static const List<List<int>> _lines = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
   final List<int> _board = List<int>.generate(9, (index) => -1);
+  final _playerScore = [0, 0];
   final _playerImages = <Image>[
     Image.network('https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg'),
     Image.network('https://flutter.github.io/assets-for-api-docs/assets/widgets/owl-2.jpg'),
@@ -73,23 +75,27 @@ class _MyHomePageState extends State<MyHomePage> {
         _turn = (_turn + 1) % 2;
         _remaining --;
       }
+      // print(index);
       for(List<int> line in _lines){
         int occupant = _board[line[0]];
         for(int i in line){
-          if(_board[i] == occupant){
-            occupant = _board[i];
-          }else{
+          if(_board[i] != occupant){
             occupant = -1;
             break;
           }
         }
-        if(occupant > -1) _winner = occupant;
+        if(occupant > -1){
+          _winner = occupant;
+          _playerScore[_winner] += 1;
+          break; // allow only one line to count
+        }
       }
     });
   }
   void _resetGameState() {
     setState(() {
-      _turn = 0;
+      _startTurn = (_startTurn+1) % 2;
+      _turn = _startTurn;
       _remaining = 9;
       _winner = -1;
       for (int i = 0; i < _board.length; i++) {
@@ -121,7 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
             children: <Widget>[
               const Text('It is currently '),
               SizedBox(
-                width: 30,
+                height: 30,
                 child: _playerImages[_turn],
               ),
               const Text('\'s turn.'),
@@ -131,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
             builder: (BuildContext context, BoxConstraints constraints) {
               // height: constraints.maxHeight / 2,
               // width: MediaQuery.of(context).size.width / 2,
-              final FixedTrackSize squareLength = (min(constraints.maxHeight, MediaQuery.of(context).size.width)/3.0 - 6).px;
+              final FixedTrackSize squareLength = (min(MediaQuery.of(context).size.height-132, MediaQuery.of(context).size.width)/3.0 - 6).px;
               return LayoutGrid(
                 columnSizes: [squareLength, 2.px, squareLength, 2.px, squareLength],
                 rowSizes: [squareLength, 2.px, squareLength, 2.px, squareLength],
@@ -180,18 +186,32 @@ class _MyHomePageState extends State<MyHomePage> {
                 } else {
                   if(_winner == -1){
                     return <Widget>[
-                      const Text('It\'s a tie!'),
+                      const Text('It\'s a tie! Press the refresh button to restart'),
                     ];
                   } else {
                     return <Widget>[
                       const Text('The winner is '),
                       _playerImages[_winner],
-                      const Text('! Press the button to restart'),
+                      const Text('! Press the refresh button to restart'),
                     ];
                   }
                 }
               }(),
             ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(
+                height: 30,
+                child: _playerImages[0]
+              ),
+              Text(' ${_playerScore[0]} - ${_playerScore[1]} '),
+              SizedBox(
+                height: 30,
+                child: _playerImages[1],
+              ),
+            ],
           )
         ],
       ),
@@ -223,7 +243,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),*/
       floatingActionButton: FloatingActionButton(
         onPressed: _resetGameState,
-        tooltip: 'Increment',
+        tooltip: 'Restart',
         child: const Icon(Icons.refresh),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
